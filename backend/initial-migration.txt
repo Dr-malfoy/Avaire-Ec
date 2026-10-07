@@ -1,0 +1,352 @@
+module.exports = {
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.createTable('products', {
+      id: {
+        type: Sequelize.UUID,
+        primaryKey: true,
+        defaultValue: {},
+      },
+      name: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      slug: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      price: {
+        type: Sequelize.DECIMAL,
+        allowNull: false,
+      },
+      originalPrice: {
+        type: Sequelize.DECIMAL,
+      },
+      category: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      section: {
+        type: Sequelize.STRING,
+      },
+      badge: {
+        type: Sequelize.ENUM,
+      },
+      description: {
+        type: Sequelize.TEXT,
+      },
+      sizes: {
+        type: Sequelize.JSONTYPE,
+        defaultValue: [],
+      },
+      colors: {
+        type: Sequelize.JSONTYPE,
+        defaultValue: [],
+      },
+      image: {
+        type: Sequelize.STRING,
+      },
+      images: {
+        type: Sequelize.JSONTYPE,
+        defaultValue: [],
+      },
+      icon: {
+        type: Sequelize.STRING,
+      },
+      inStock: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: true,
+      },
+      stockCount: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0,
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+    });
+
+    await queryInterface.createTable('orders', {
+      id: {
+        type: Sequelize.UUID,
+        primaryKey: true,
+        defaultValue: {},
+      },
+      orderNumber: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      customer: {
+        type: Sequelize.JSONTYPE,
+      },
+      items: {
+        type: Sequelize.JSONTYPE,
+      },
+      total: {
+        type: Sequelize.DECIMAL,
+        allowNull: false,
+      },
+      status: {
+        type: Sequelize.STRING,
+        defaultValue: "Processing",
+      },
+      paymentMethod: {
+        type: Sequelize.STRING,
+      },
+      paymentIntentId: {
+        type: Sequelize.STRING,
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+    });
+
+    await queryInterface.createTable('users', {
+      id: {
+        type: Sequelize.UUID,
+        primaryKey: true,
+        defaultValue: {},
+      },
+      name: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      email: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      password: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      role: {
+        type: Sequelize.ENUM,
+        defaultValue: "user",
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+    });
+
+    await queryInterface.createTable('abandoned_carts', {
+      id: {
+        type: Sequelize.UUID,
+        primaryKey: true,
+        defaultValue: {},
+      },
+      email: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      name: {
+        type: Sequelize.STRING,
+      },
+      address: {
+        type: Sequelize.STRING,
+      },
+      city: {
+        type: Sequelize.STRING,
+      },
+      country: {
+        type: Sequelize.STRING,
+      },
+      zip: {
+        type: Sequelize.STRING,
+      },
+      items: {
+        type: Sequelize.JSONTYPE,
+        allowNull: false,
+      },
+      total: {
+        type: Sequelize.DECIMAL,
+        allowNull: false,
+      },
+      status: {
+        type: Sequelize.STRING,
+        defaultValue: "abandoned",
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+    });
+
+    await queryInterface.createTable('chat_conversations', {
+      id: {
+        type: Sequelize.UUID,
+        primaryKey: true,
+        defaultValue: {},
+      },
+      sessionId: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      customerName: {
+        type: Sequelize.STRING,
+        defaultValue: "Guest",
+      },
+      customerEmail: {
+        type: Sequelize.STRING,
+        defaultValue: "",
+      },
+      status: {
+        type: Sequelize.ENUM,
+        defaultValue: "open",
+      },
+      unreadByAdmin: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0,
+      },
+      unreadByCustomer: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0,
+      },
+      lastMessage: {
+        type: Sequelize.TEXT,
+        defaultValue: "",
+      },
+      lastMessageAt: {
+        type: Sequelize.DATE,
+        defaultValue: {},
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+    });
+
+    await queryInterface.createTable('chat_messages', {
+      id: {
+        type: Sequelize.UUID,
+        primaryKey: true,
+        defaultValue: {},
+      },
+      content: {
+        type: Sequelize.TEXT,
+        allowNull: false,
+      },
+      sender: {
+        type: Sequelize.ENUM,
+        allowNull: false,
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+      conversationId: {
+        type: Sequelize.UUID,
+      },
+    });
+
+    await queryInterface.createTable('coupons', {
+      code: {
+        type: Sequelize.STRING,
+        primaryKey: true,
+        allowNull: false,
+      },
+      discountType: {
+        type: Sequelize.ENUM,
+        allowNull: false,
+      },
+      discountValue: {
+        type: Sequelize.DECIMAL,
+        allowNull: false,
+      },
+      isActive: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: true,
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+    });
+
+    await queryInterface.createTable('Sections', {
+      id: {
+        type: Sequelize.STRING,
+        primaryKey: true,
+        allowNull: false,
+      },
+      label: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      desc: {
+        type: Sequelize.STRING,
+      },
+      emoji: {
+        type: Sequelize.STRING,
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+    });
+
+    await queryInterface.createTable('settings', {
+      key: {
+        type: Sequelize.STRING,
+        primaryKey: true,
+        allowNull: false,
+      },
+      value: {
+        type: Sequelize.TEXT,
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+    });
+
+  },
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('products');
+    await queryInterface.dropTable('orders');
+    await queryInterface.dropTable('users');
+    await queryInterface.dropTable('abandoned_carts');
+    await queryInterface.dropTable('chat_conversations');
+    await queryInterface.dropTable('chat_messages');
+    await queryInterface.dropTable('coupons');
+    await queryInterface.dropTable('Sections');
+    await queryInterface.dropTable('settings');
+  }
+};

@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --black: #0a0a0a;
+  --white: #fafaf8;
+  --cream: #f5f2ec;
+  --gold: #c9a96e;
+  --gold-light: #e8d5b0;
+  --muted: #8a8680;
+  --dark-muted: #3a3835;
+  --red: #c0392b;
+}
+
+* {
+  cursor: none;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Restore normal cursor on touch / coarse-pointer devices (phones, tablets) */
+@media (hover: none) or (pointer: coarse) {
+  * { cursor: auto !important; }
+  a, button, [role="button"] { cursor: pointer !important; }
+  input, textarea { cursor: text !important; }
+}
+
+/* Normal cursor for all admin pages */
+[data-admin] * {
+  cursor: auto !important;
+}
+[data-admin] a,
+[data-admin] button,
+[data-admin] select,
+[data-admin] input,
+[data-admin] textarea,
+[data-admin] label[for],
+[data-admin] [role="button"] {
+  cursor: pointer !important;
+}
+[data-admin] input,
+[data-admin] textarea {
+  cursor: text !important;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--white);
+  color: var(--black);
+  overflow-x: hidden;
+}
+
+.font-display { font-family: 'Cormorant Garamond', serif; }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #ece9e3 25%, #dedad3 50%, #ece9e3 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}

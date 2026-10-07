@@ -1,0 +1,10 @@
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+PassengerAppRoot "/home/wearqjaf/official.aviar.wearm3s.com"
+PassengerBaseURI "/"
+PassengerNodejs "/home/wearqjaf/nodevenv/official.aviar.wearm3s.com/20/bin/node"
+PassengerAppType node
+PassengerStartupFile server.js
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+
+# Disable Directory Indexing
+Options -Indexes
