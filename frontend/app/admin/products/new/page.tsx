@@ -13,7 +13,11 @@ interface Section {
   desc: string;
   emoji: string;
 }
-const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "One Size"];
+const SIZE_PRESETS = [
+  { group: "Standard", sizes: ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "Free Size", "One Size"] },
+  { group: "Waist / Numeric", sizes: ["26", "28", "30", "32", "34", "36", "38", "40", "42", "44"] },
+  { group: "Footwear", sizes: ["37", "38", "39", "40", "41", "42", "43", "44", "45", "46"] },
+];
 const CATS = ["Clothing", "Accessories", "Home", "Shoes", "Bags"];
 
 interface Img { preview: string; url: string; uploading: boolean; error: boolean; }
@@ -26,6 +30,7 @@ const label: React.CSSProperties = { fontSize: "10px", letterSpacing: "0.15em", 
 export default function AddProductPage() {
   const router = useRouter();
   const [form, setForm] = useState({ name: "", description: "", price: "", originalPrice: "", stockCount: "0", inStock: true, category: "Clothing", sizes: [] as string[], colors: [] as string[], colorInput: "", section: "" });
+  const [sizeInput, setSizeInput] = useState("");
   const [images, setImages] = useState<Img[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
   const [saving, setSaving] = useState(false);
@@ -90,6 +95,22 @@ export default function AddProductPage() {
     } finally { setSecSaving(false); }
   };
 
+  const addCustomSize = (val: string) => {
+    const trimmed = val.trim();
+    if (!trimmed) return;
+    if (!form.sizes.includes(trimmed)) {
+      setForm(p => ({ ...p, sizes: [...p.sizes, trimmed] }));
+    }
+    setSizeInput("");
+  };
+
+  const toggleSize = (s: string) => {
+    setForm(p => ({
+      ...p,
+      sizes: p.sizes.includes(s) ? p.sizes.filter(x => x !== s) : [...p.sizes, s]
+    }));
+  };
+
   const uploadFile = useCallback(async (file: File): Promise<string> => {
     const fd = new FormData(); fd.append("file", file); fd.append("section", form.section || "collection");
     const res = await authFetch("/api/admin/upload", { method: "POST", body: fd });
@@ -99,7 +120,7 @@ export default function AddProductPage() {
 
   const addFiles = useCallback(async (files: FileList | null) => {
     if (!files) return;
-    const toAdd = Array.from(files).slice(0, 5 - images.length);
+    const toAdd = Array.from(files).slice(0, 15 - images.length);
     if (!toAdd.length) return;
     const newItems: Img[] = toAdd.map(f => ({ preview: URL.createObjectURL(f), url: "", uploading: true, error: false }));
     setImages(prev => [...prev, ...newItems]);
@@ -114,7 +135,6 @@ export default function AddProductPage() {
     const e: Record<string, string> = {};
     if (!form.name.trim()) e.name = "Required";
     if (!form.price || Number(form.price) <= 0) e.price = "Required";
-    if (!form.section) e.section = "Please select a section";
     if (!images.filter(i => i.url).length) e.images = "At least one image required";
     setErrors(e); return !Object.keys(e).length;
   };
@@ -124,7 +144,26 @@ export default function AddProductPage() {
     setSaving(true);
     try {
       const urls = images.filter(i => i.url).map(i => i.url);
-      const res = await authFetch("/api/admin/products", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: form.name, description: form.description, price: Number(form.price), originalPrice: form.originalPrice ? Number(form.originalPrice) : null, category: form.category, section: form.section, sizes: form.sizes, colors: form.colors, stockCount: Number(form.stockCount), inStock: form.inStock, images: urls, image: urls[0] ?? "", badge: form.section === "sale" ? "sale" : form.section === "new_arrival" ? "new" : null }) });
+      const chosenSection = form.section || (sections.length > 0 ? sections[0].id : "collection");
+      const res = await authFetch("/api/admin/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          description: form.description,
+          price: Number(form.price),
+          originalPrice: form.originalPrice ? Number(form.originalPrice) : null,
+          category: form.category,
+          section: chosenSection,
+          sizes: form.sizes,
+          colors: form.colors,
+          stockCount: Number(form.stockCount),
+          inStock: form.inStock,
+          images: urls,
+          image: urls[0] ?? "",
+          badge: chosenSection === "sale" ? "sale" : chosenSection === "new_arrival" ? "new" : null
+        })
+      });
       if (res.ok) { showToast("Product saved!"); setTimeout(() => router.push("/admin/products"), 1200); }
       else showToast("Failed to save", false);
     } catch { showToast("An error occurred", false); }
@@ -144,7 +183,7 @@ export default function AddProductPage() {
         <div>
           {/* Images */}
           <div style={card}>
-            <span style={label}>Product Images {images.length}/5</span>
+            <span style={label}>Product Images ({images.length})</span>
             {images.length > 0 && (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 12 }}>
                 {images.map((img, i) => (
@@ -158,13 +197,13 @@ export default function AddProductPage() {
                 ))}
               </div>
             )}
-            {images.length < 5 && (
+            {images.length < 20 && (
               <label onDragOver={e => { e.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={e => { e.preventDefault(); setDragging(false); addFiles(e.dataTransfer.files); }}
-                style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: `2px dashed ${errors.images ? "#c0392b" : dragging ? "#c9a96e" : "rgba(0,0,0,0.15)"}`, padding: "32px 16px", textAlign: "center", background: dragging ? "rgba(201,169,110,0.04)" : "transparent", transition: "all 0.2s" }}>
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: `2px dashed ${errors.images ? "#c0392b" : dragging ? "#c9a96e" : "rgba(0,0,0,0.15)"}`, padding: "32px 16px", textAlign: "center", background: dragging ? "rgba(201,169,110,0.04)" : "transparent", transition: "all 0.2s", cursor: "pointer" }}>
                 <div style={{ fontSize: "28px", marginBottom: 10 }}>📸</div>
                 <div style={{ fontSize: "13px", color: "#0a0a0a", marginBottom: 4 }}>Drag & drop images here</div>
                 <div style={{ fontSize: "12px", color: "#8a8680", marginBottom: 8 }}>or click to browse</div>
-                <div style={{ fontSize: "11px", color: "#8a8680" }}>PNG, JPG · Max 5 images</div>
+                <div style={{ fontSize: "11px", color: "#8a8680" }}>PNG, JPG, WebP · High resolution supported</div>
                 <input type="file" accept="image/*" multiple style={{ display: "none" }} onChange={e => addFiles(e.target.files)} />
               </label>
             )}
@@ -246,14 +285,99 @@ export default function AddProductPage() {
           </div>
 
           <div style={card}>
-            <span style={label}>Sizes</span>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {SIZES.map(size => (
-                <button key={size} type="button" onClick={() => setForm(p => ({ ...p, sizes: p.sizes.includes(size) ? p.sizes.filter(s => s !== size) : [...p.sizes, size] }))}
-                  style={{ padding: "8px 14px", fontSize: "12px", border: `${form.sizes.includes(size) ? "1px solid #0a0a0a" : "0.5px solid rgba(0,0,0,0.2)"}`, background: form.sizes.includes(size) ? "#0a0a0a" : "transparent", color: form.sizes.includes(size) ? "#fafaf8" : "#0a0a0a", transition: "all 0.15s" }}>
-                  {size}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <span style={{ ...label, marginBottom: 0 }}>Sizes ({form.sizes.length} selected)</span>
+              {form.sizes.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setForm(p => ({ ...p, sizes: [] }))}
+                  style={{ background: "none", border: "none", fontSize: "11px", color: "#8a8680", cursor: "pointer", textDecoration: "underline" }}
+                >
+                  Clear All
                 </button>
-              ))}
+              )}
+            </div>
+
+            {/* Custom Size Input */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+              <input
+                placeholder="Custom size (e.g. 3XL, 34W, 42 EU, Custom Fit)"
+                value={sizeInput}
+                onChange={e => setSizeInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addCustomSize(sizeInput);
+                  }
+                }}
+                style={{ ...inp, flex: 1 }}
+              />
+              <button
+                type="button"
+                onClick={() => addCustomSize(sizeInput)}
+                style={{ padding: "0 18px", background: "#0a0a0a", color: "#fafaf8", border: "none", fontSize: "12px", letterSpacing: "0.06em", cursor: "pointer" }}
+              >
+                Add Size
+              </button>
+            </div>
+
+            {/* Selected Sizes Chips */}
+            {form.sizes.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: "10px", color: "#8a8680", marginBottom: 6, letterSpacing: "0.08em", textTransform: "uppercase" }}>Selected Sizes:</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {form.sizes.map(size => (
+                    <span
+                      key={size}
+                      style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#0a0a0a", color: "#fafaf8", padding: "6px 12px", fontSize: "12px" }}
+                    >
+                      {size}
+                      <button
+                        type="button"
+                        onClick={() => toggleSize(size)}
+                        style={{ background: "none", border: "none", color: "#fafaf8", fontSize: "14px", cursor: "pointer", padding: 0, lineHeight: 1 }}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Presets */}
+            <div>
+              <div style={{ fontSize: "10px", color: "#8a8680", marginBottom: 8, letterSpacing: "0.08em", textTransform: "uppercase" }}>Quick Presets:</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {SIZE_PRESETS.map(preset => (
+                  <div key={preset.group}>
+                    <div style={{ fontSize: "10px", color: "#8a8680", marginBottom: 4 }}>{preset.group}</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {preset.sizes.map(size => {
+                        const isSelected = form.sizes.includes(size);
+                        return (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => toggleSize(size)}
+                            style={{
+                              padding: "6px 12px",
+                              fontSize: "12px",
+                              border: isSelected ? "1px solid #0a0a0a" : "0.5px solid rgba(0,0,0,0.2)",
+                              background: isSelected ? "#0a0a0a" : "transparent",
+                              color: isSelected ? "#fafaf8" : "#0a0a0a",
+                              cursor: "pointer",
+                              transition: "all 0.15s"
+                            }}
+                          >
+                            {size}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 

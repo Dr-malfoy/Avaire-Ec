@@ -84,9 +84,31 @@ const startServer = async () => {
       console.log('Seeded initial product sections.');
     }
 
-    app.listen(PORT, () => {
-      console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+    const server = app.listen(PORT, () => {
+      console.log(`Server running in ${process.env.NODE_ENV || 'production'} mode on port ${PORT}`);
     });
+
+    const gracefulShutdown = async (signal) => {
+      console.log(`\nReceived ${signal}. Shutting down gracefully...`);
+      server.close(async () => {
+        try {
+          await sequelize.close();
+          console.log('Database connection closed.');
+        } catch (err) {
+          console.error('Error closing database connection:', err);
+        }
+        process.exit(0);
+      });
+
+      // Force shutdown if taking longer than 10 seconds
+      setTimeout(() => {
+        console.error('Forced shutdown due to timeout.');
+        process.exit(1);
+      }, 10000).unref();
+    };
+
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
@@ -94,3 +116,4 @@ const startServer = async () => {
 };
 
 startServer();
+

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useWishlist } from "@/context/WishlistContext";
+import { getImageUrl } from "@/lib/api";
 
 export type Product = {
   id: string;
@@ -18,6 +19,7 @@ export type Product = {
   slug?: string;
 };
 
+
 type ProductCardProps = {
   product: Product;
   onAddToCart: (product: Product) => void;
@@ -25,6 +27,7 @@ type ProductCardProps = {
 
 const ProductCard = memo(function ProductCard({ product, onAddToCart }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const { toggleWishlist, isInWishlist } = useWishlist();
   const inWishlist = isInWishlist(product.id);
   const slug = product.slug || product.name.toLowerCase().replace(/\s+/g, "-");
@@ -159,11 +162,17 @@ const ProductCard = memo(function ProductCard({ product, onAddToCart }: ProductC
           transition: "transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
           transform: isHovered ? "scale(1.15) translateY(-5%)" : "scale(1) translateY(0)",
         }}>
-          {product.image ? (
-            <Image src={product.image} alt={product.name} fill style={{ objectFit: "contain", filter: "drop-shadow(0 20px 30px rgba(0,0,0,0.2))" }} />
+          {product.image && !imgError ? (
+            <Image
+              src={getImageUrl(product.image)}
+              alt={product.name}
+              fill
+              style={{ objectFit: "contain", filter: "drop-shadow(0 20px 30px rgba(0,0,0,0.2))" }}
+              onError={() => setImgError(true)}
+            />
           ) : (
             <div style={{ fontSize: "72px", filter: "drop-shadow(0 20px 30px rgba(0,0,0,0.2))" }}>
-              {product.icon}
+              {product.icon || "🛍️"}
             </div>
           )}
         </div>

@@ -8,6 +8,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAbandonedSave } from "@/lib/useAbandonedSave";
 import ProductNotFound from "@/components/ProductNotFound";
+import { getImageUrl } from "@/lib/api";
+
 
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -132,7 +134,7 @@ function BuyForm({ product }: { product: BuyProduct }) {
       const data = await res.json() as { orderNumber?: string; message?: string };
       if (!res.ok) { setError(data.message ?? "Failed to place order"); return; }
       try {
-        localStorage.setItem("aviar_last_order", JSON.stringify({ orderNumber: data.orderNumber, email: form.email.trim() }));
+        localStorage.setItem("aviar_last_order", JSON.stringify({ orderNumber: data.orderNumber, email: form.email.trim(), phone }));
       } catch {}
       router.push(`/order/confirmation?order=${encodeURIComponent(data.orderNumber ?? "")}`);
     } catch {
@@ -189,7 +191,7 @@ function BuyForm({ product }: { product: BuyProduct }) {
               <div style={{ aspectRatio: "3/4", background: "#f5f2ec", position: "relative", overflow: "hidden", marginBottom: 10 }}>
                 {product.images.length > 0 ? (
                   <Image
-                    src={product.images[activeImg]}
+                    src={getImageUrl(product.images[activeImg])}
                     alt={product.name}
                     fill
                     style={{ objectFit: "cover" }}
@@ -214,7 +216,7 @@ function BuyForm({ product }: { product: BuyProduct }) {
                   {product.images.map((src, i) => (
                     <button key={i} onClick={() => setActiveImg(i)}
                       style={{ width: 56, height: 70, border: activeImg === i ? "1.5px solid #0a0a0a" : "0.5px solid rgba(0,0,0,0.15)", padding: 0, cursor: "pointer", overflow: "hidden", position: "relative", background: "none", flexShrink: 0 }}>
-                      <Image src={src} alt={`View ${i + 1}`} fill style={{ objectFit: "cover" }} sizes="56px" unoptimized />
+                      <Image src={getImageUrl(src)} alt={`View ${i + 1}`} fill style={{ objectFit: "cover" }} sizes="56px" unoptimized />
                     </button>
                   ))}
                 </div>
@@ -268,7 +270,7 @@ function BuyForm({ product }: { product: BuyProduct }) {
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     {product.sizes.map((s) => (
                       <button key={s} onClick={() => !isOutOfStock && setSelectedSize(s)}
-                        style={{ width: 46, height: 46, fontSize: "12px", border: selectedSize === s ? "1.5px solid #0a0a0a" : "0.5px solid rgba(0,0,0,0.2)", background: selectedSize === s ? "#0a0a0a" : "none", color: selectedSize === s ? "#fafaf8" : "#0a0a0a", cursor: "pointer", transition: "all 0.15s" }}>
+                        style={{ minWidth: 46, height: 46, padding: "0 12px", fontSize: "12px", border: selectedSize === s ? "1.5px solid #0a0a0a" : "0.5px solid rgba(0,0,0,0.2)", background: selectedSize === s ? "#0a0a0a" : "none", color: selectedSize === s ? "#fafaf8" : "#0a0a0a", cursor: "pointer", transition: "all 0.15s" }}>
                         {s}
                       </button>
                     ))}
@@ -383,8 +385,8 @@ function BuyForm({ product }: { product: BuyProduct }) {
                   <input name="phone" type="tel" inputMode="tel" autoComplete="tel" value={form.phone} onChange={handleChange} required placeholder="01XXXXXXXXX" style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Email Address *</label>
-                  <input name="email" type="email" autoComplete="email" value={form.email} onChange={handleChange} required placeholder="you@example.com" style={inputStyle} />
+                  <label style={labelStyle}>Email Address (Optional)</label>
+                  <input name="email" type="email" autoComplete="email" value={form.email} onChange={handleChange} placeholder="you@example.com (optional)" style={inputStyle} />
                 </div>
                 <div>
                   <label style={labelStyle}>Delivery Address *</label>

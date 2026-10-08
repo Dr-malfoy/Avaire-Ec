@@ -81,7 +81,7 @@ export default function StorefrontSettingsPage() {
 
     // Footer Section
     footer_tagline: "Timeless design, exceptional craft. Luxury that respects the planet.",
-    footer_copyright: "AVIAR. All rights reserved.",
+    footer_copyright: "AVIAR. All rights reserved to mystrixit.site",
     footer_subtext: "Crafted by Samrise Digital",
     footer_instagram: "https://instagram.com",
     footer_pinterest: "https://pinterest.com",
@@ -965,7 +965,7 @@ export default function StorefrontSettingsPage() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
               <div>
                 <label style={labelStyle}>Copyright Line Text</label>
-                <input name="footer_copyright" value={settings.footer_copyright} onChange={handleChange} style={inputStyle} placeholder="AVIAR. All rights reserved." />
+                <input name="footer_copyright" value={settings.footer_copyright} onChange={handleChange} style={inputStyle} placeholder="AVIAR. All rights reserved to mystrixit.site" />
               </div>
               <div>
                 <label style={labelStyle}>Credits / Subtext</label>

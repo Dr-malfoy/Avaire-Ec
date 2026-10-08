@@ -157,13 +157,17 @@ function TrackContent() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  const fetchOrder = async (orderNum: string, emailAddr: string) => {
+  const fetchOrder = async (orderNum: string, emailOrPhone: string) => {
     setError("");
     setLoading(true);
     setOrder(null);
     try {
+      const isEmail = emailOrPhone.includes("@");
+      const param = isEmail
+        ? `email=${encodeURIComponent(emailOrPhone)}`
+        : `phone=${encodeURIComponent(emailOrPhone)}`;
       const res = await fetch(
-        `/api/orders/track?orderNumber=${encodeURIComponent(orderNum)}&email=${encodeURIComponent(emailAddr)}`
+        `/api/orders/track?orderNumber=${encodeURIComponent(orderNum)}&${param}`
       );
       const data = await res.json();
       if (!res.ok) {
@@ -172,7 +176,7 @@ function TrackContent() {
         setOrder(data.order);
         // Remember credentials so customer doesn't have to retype on reload
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({ orderNumber: orderNum, email: emailAddr }));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ orderNumber: orderNum, email: emailOrPhone }));
         } catch {}
       }
     } catch {
@@ -184,7 +188,7 @@ function TrackContent() {
 
   // On mount: restore saved credentials and auto-fetch if we have them
   useEffect(() => {
-    let saved: { orderNumber?: string; email?: string } | null = null;
+    let saved: { orderNumber?: string; email?: string; phone?: string } | null = null;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) saved = JSON.parse(raw);
@@ -192,12 +196,12 @@ function TrackContent() {
 
     const urlOrder = params.get("order")?.toUpperCase() ?? "";
     const finalOrder = urlOrder || saved?.orderNumber || "";
-    const finalEmail = saved?.email || "";
+    const finalContact = saved?.email || saved?.phone || "";
 
     if (finalOrder) setOrderNumber(finalOrder);
-    if (finalEmail) setEmail(finalEmail);
-    if (finalOrder && finalEmail) {
-      fetchOrder(finalOrder, finalEmail);
+    if (finalContact) setEmail(finalContact);
+    if (finalOrder && finalContact) {
+      fetchOrder(finalOrder, finalContact);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -236,7 +240,7 @@ function TrackContent() {
             Track Your <em>Order</em>
           </h1>
           <p style={{ fontSize: 14, color: "#8a8680", marginTop: 12, lineHeight: 1.6, maxWidth: 520 }}>
-            Enter the order number you received in your confirmation email along with the email address used at checkout.
+            Enter the order number you received along with the email address or phone number used at checkout.
           </p>
         </div>
 
@@ -261,13 +265,13 @@ function TrackContent() {
             </div>
             <div>
               <label style={{ display: "block", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "#8a8680", marginBottom: 8 }}>
-                Email Address
+                Email or Phone Number
               </label>
               <input
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                placeholder="you@example.com or 01XXXXXXXXX"
                 style={inputStyle}
                 required
               />

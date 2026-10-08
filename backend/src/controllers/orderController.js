@@ -12,7 +12,14 @@ const customerSchema = z.object({
   phone: z.string().trim()
     .transform((v) => v.replace(/[\s-]/g, ''))
     .refine((v) => /^(\+?88)?01[3-9]\d{8}$/.test(v), 'Please enter a valid Bangladeshi phone number'),
-  email: z.string().trim().toLowerCase().email('Please enter a valid email address').max(200),
+  email: z.string().trim().toLowerCase().max(200)
+    .optional()
+    .nullable()
+    .or(z.literal(''))
+    .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
+      message: 'Please enter a valid email address',
+    })
+    .transform((v) => (v ? v.trim().toLowerCase() : '')),
   address: z.string().trim().min(3, 'Please enter your delivery address').max(300),
   city: z.string().trim().max(100).optional(),
   deliveryZone: z.string().trim().max(50).optional(),
@@ -47,18 +54,34 @@ const getOrderById = async (req, res, next) => {
   }
 };
 
-// GET /api/orders/track?orderNumber=...&email=...   (public)
-// GET /api/orders/track/:orderNumber?email=...       (public, older URL)
-// The email must match, so order details can't be looked up by number alone.
+// GET /api/orders/track?orderNumber=...&email=... or phone=... (public)
+// GET /api/orders/track/:orderNumber?email=... or phone=... (public, older URL)
 const trackOrder = async (req, res, next) => {
   try {
     const orderNumber = String(req.params.orderNumber || req.query.orderNumber || '').trim();
     const email = String(req.query.email || '').trim().toLowerCase();
-    if (!orderNumber || !email) throw httpError(400, 'Order number and email are required');
+    const phone = String(req.query.phone || '').trim().replace(/[\s-]/g, '');
+    if (!orderNumber) throw httpError(400, 'Order number is required');
 
     const order = await Order.findOne({ where: { orderNumber } });
-    if (!order || (order.customer?.email || '').toLowerCase() !== email) {
+    if (!order) {
       throw httpError(404, 'Could not find your order. Please check the details and try again.');
+    }
+
+    const orderEmail = (order.customer?.email || '').trim().toLowerCase();
+    const orderPhone = (order.customer?.phone || '').trim().replace(/[\s-]/g, '');
+
+    // Verification check:
+    if (email) {
+      if (orderEmail && orderEmail !== email) {
+        throw httpError(404, 'Could not find your order. Please check the details and try again.');
+      }
+    } else if (phone) {
+      if (orderPhone && orderPhone !== phone) {
+        throw httpError(404, 'Could not find your order. Please check the details and try again.');
+      }
+    } else if (orderEmail) {
+      throw httpError(400, 'Please provide the email address or phone used at checkout');
     }
 
     const c = order.customer || {};
@@ -126,7 +149,9 @@ const createOrder = async (req, res, next) => {
     });
 
     // The customer finished checking out — close their abandoned-cart follow-up
-    AbandonedCart.update({ status: 'recovered' }, { where: { email: customer.email } }).catch(() => {});
+    if (customer.email) {
+      AbandonedCart.update({ status: 'recovered' }, { where: { email: customer.email } }).catch(() => {});
+    }
 
     res.status(201).json(order);
   } catch (error) {

@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { authFetch } from "@/lib/authFetch";
+import { getImageUrl } from "@/lib/api";
+
 
 interface AdminProduct {
   id: string; name: string; price: number; originalPrice?: number;
@@ -27,8 +29,8 @@ export default function AdminProductsPage() {
   const [sectionFilter, setSectionFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [perPage, setPerPage] = useState(25);
   const [toast, setToast] = useState({ show: false, message: "", ok: true });
-  const PER_PAGE = 10;
 
   const showToast = (message: string, ok = true) => {
     setToast({ show: true, message, ok });
@@ -55,8 +57,8 @@ export default function AdminProductsPage() {
     return list;
   }, [products, sectionFilter, search]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
-  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  const paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
@@ -128,7 +130,8 @@ export default function AdminProductsPage() {
               </thead>
               <tbody>
                 {paginated.map(p => {
-                  const thumb = p.images?.[0] ?? p.image;
+                  const rawThumb = p.images?.[0] ?? p.image;
+                  const thumb = rawThumb ? getImageUrl(rawThumb) : null;
                   const sec = sections.find(s => s.id === p.section);
                   return (
                     <tr key={p.id} style={{ borderBottom: "0.5px solid rgba(0,0,0,0.05)" }}>

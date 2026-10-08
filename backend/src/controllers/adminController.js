@@ -35,6 +35,36 @@ const normalizeProduct = (data) => {
   if (d.section === '') d.section = null;
   if (d.stockCount !== undefined) d.stockCount = Math.max(0, Number.parseInt(d.stockCount, 10) || 0);
   if (Array.isArray(d.images) && d.images.length && !d.image) d.image = d.images[0];
+  if (d.sizes !== undefined) {
+    if (typeof d.sizes === 'string') {
+      try {
+        const parsed = JSON.parse(d.sizes);
+        d.sizes = Array.isArray(parsed) ? parsed : [d.sizes];
+      } catch {
+        d.sizes = d.sizes.split(',').map((s) => s.trim()).filter(Boolean);
+      }
+    }
+    if (Array.isArray(d.sizes)) {
+      d.sizes = Array.from(new Set(d.sizes.map((s) => String(s).trim()).filter(Boolean)));
+    } else {
+      d.sizes = [];
+    }
+  }
+  if (d.colors !== undefined) {
+    if (typeof d.colors === 'string') {
+      try {
+        const parsed = JSON.parse(d.colors);
+        d.colors = Array.isArray(parsed) ? parsed : [d.colors];
+      } catch {
+        d.colors = d.colors.split(',').map((c) => c.trim()).filter(Boolean);
+      }
+    }
+    if (Array.isArray(d.colors)) {
+      d.colors = Array.from(new Set(d.colors.map((c) => String(c).trim()).filter(Boolean)));
+    } else {
+      d.colors = [];
+    }
+  }
   return d;
 };
 

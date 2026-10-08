@@ -135,7 +135,7 @@ function CheckoutForm() {
       const data = await res.json() as { orderNumber?: string; message?: string };
       if (!res.ok) { setError(data.message ?? "Failed to place order. Please try again."); return; }
       try {
-        localStorage.setItem("aviar_last_order", JSON.stringify({ orderNumber: data.orderNumber, email: form.email.trim() }));
+        localStorage.setItem("aviar_last_order", JSON.stringify({ orderNumber: data.orderNumber, email: form.email.trim(), phone }));
       } catch {}
       clearCart();
       router.push(`/order/confirmation?order=${encodeURIComponent(data.orderNumber ?? "")}`);
@@ -174,7 +174,7 @@ function CheckoutForm() {
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <input name="name" placeholder="Full Name" autoComplete="name" value={form.name} onChange={handleChange} required style={inputStyle} />
               <input name="phone" type="tel" inputMode="tel" placeholder="Phone Number (01XXXXXXXXX)" autoComplete="tel" value={form.phone} onChange={handleChange} required style={inputStyle} />
-              <input name="email" type="email" placeholder="Email Address" autoComplete="email" value={form.email} onChange={handleChange} required style={inputStyle} />
+              <input name="email" type="email" placeholder="Email Address (Optional)" autoComplete="email" value={form.email} onChange={handleChange} style={inputStyle} />
               <textarea
                 name="address"
                 placeholder="Delivery Address (House/Road, Area, Thana/City)"

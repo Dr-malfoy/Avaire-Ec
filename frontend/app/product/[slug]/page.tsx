@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductDetail from "@/components/ProductDetail";
+import { getApiUrl } from "@/lib/api";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -11,8 +12,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-    const res = await fetch(`${apiUrl}/api/products/slug/${encodeURIComponent(slug)}`, { next: { revalidate: 60 } });
+    const res = await fetch(getApiUrl(`/api/products/slug/${encodeURIComponent(slug)}`), { next: { revalidate: 60 } });
     if (res.ok) {
       const product = await res.json();
       if (product) {

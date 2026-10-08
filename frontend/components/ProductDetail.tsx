@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import Breadcrumb from "@/components/Breadcrumb";
 import ProductNotFound from "@/components/ProductNotFound";
 import type { ProductBadge } from "@/lib/types";
+import { getImageUrl } from "@/lib/api";
 
 interface DetailProduct {
   id: string;
@@ -220,8 +221,12 @@ export default function ProductDetail({ slug }: { slug: string }) {
 
   if (!product) return <ProductNotFound />;
 
-  const displayImages = product.images.length > 0 ? product.images : null;
+  const rawImages = (product.images && product.images.length > 0)
+    ? product.images
+    : (product.image ? [product.image] : []);
+  const displayImages = rawImages.length > 0 ? rawImages.map((img) => getImageUrl(img)) : null;
   const isOutOfStock = product.inStock === false || (product.stockCount !== undefined && product.stockCount <= 0);
+
 
   return (
     <div style={{ background: "#fafaf8", minHeight: "100vh" }}>
@@ -351,7 +356,7 @@ export default function ProductDetail({ slug }: { slug: string }) {
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                   {product.sizes.map((size) => (
                     <button key={size} onClick={() => !isOutOfStock && setSelectedSize(size)}
-                      style={{ width: "52px", height: "52px", fontSize: "12px", border: selectedSize === size ? "1.5px solid #0a0a0a" : "0.5px solid rgba(0,0,0,0.2)", background: selectedSize === size ? "#0a0a0a" : "none", color: selectedSize === size ? "#fafaf8" : isOutOfStock ? "#ccc" : "#0a0a0a", cursor: isOutOfStock ? "not-allowed" : "pointer", transition: "all 0.2s", opacity: isOutOfStock ? 0.5 : 1 }}>
+                      style={{ minWidth: "48px", height: "52px", padding: "0 14px", fontSize: "12px", border: selectedSize === size ? "1.5px solid #0a0a0a" : "0.5px solid rgba(0,0,0,0.2)", background: selectedSize === size ? "#0a0a0a" : "none", color: selectedSize === size ? "#fafaf8" : isOutOfStock ? "#ccc" : "#0a0a0a", cursor: isOutOfStock ? "not-allowed" : "pointer", transition: "all 0.2s", opacity: isOutOfStock ? 0.5 : 1 }}>
                       {size}
                     </button>
                   ))}

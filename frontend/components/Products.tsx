@@ -47,9 +47,15 @@ export default function Products({ shopMode = false, initialFilter }: ProductsPr
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("All");
   const [sort, setSort] = useState(initialFilter === "new" ? "newest" : "featured");
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const [priceMax, setPriceMax] = useState<number | null>(null);
   const [showSaleOnly, setShowSaleOnly] = useState(initialFilter === "sale");
   const [cols, setCols] = useState(4);
+
+  const maxPriceLimit = useMemo(() => {
+    if (!products.length) return 50000;
+    const highest = Math.max(...products.map(p => p.price || 0));
+    return Math.max(5000, Math.ceil(highest / 500) * 500);
+  }, [products]);
 
   // JS-based responsive columns (works reliably with Turbopack)
   useEffect(() => {
@@ -147,7 +153,9 @@ export default function Products({ shopMode = false, initialFilter }: ProductsPr
   const filtered = useMemo(() => {
     let list = activeTab === "All" ? products : products.filter((p) => p.category === activeTab);
     if (showSaleOnly) list = list.filter((p) => p.badge === "sale");
-    list = list.filter((p) => p.price >= priceRange[0] && p.price <= priceRange[1]);
+    if (priceMax !== null) {
+      list = list.filter((p) => p.price <= priceMax);
+    }
     switch (sort) {
       case "price-asc": return [...list].sort((a, b) => a.price - b.price);
       case "price-desc": return [...list].sort((a, b) => b.price - a.price);
@@ -155,7 +163,7 @@ export default function Products({ shopMode = false, initialFilter }: ProductsPr
       case "sale": return [...list].sort((a) => (a.badge === "sale" ? -1 : 1));
       default: return list;
     }
-  }, [products, activeTab, sort, priceRange, showSaleOnly]);
+  }, [products, activeTab, sort, priceMax, showSaleOnly]);
 
   const skeletonCount = shopMode ? 8 : 8;
 
@@ -277,13 +285,13 @@ export default function Products({ shopMode = false, initialFilter }: ProductsPr
                 <input
                   type="range"
                   min={0}
-                  max={1000}
-                  step={50}
-                  value={priceRange[1]}
-                  onChange={(e) => setPriceRange([0, Number(e.target.value)])}
+                  max={maxPriceLimit}
+                  step={Math.max(50, Math.floor(maxPriceLimit / 100))}
+                  value={priceMax ?? maxPriceLimit}
+                  onChange={(e) => setPriceMax(Number(e.target.value))}
                   style={{ width: "80px", accentColor: "#c9a96e" }}
                 />
-                <span>৳{priceRange[1]}</span>
+                <span>৳{priceMax ?? maxPriceLimit}</span>
               </div>
             )}
           </div>

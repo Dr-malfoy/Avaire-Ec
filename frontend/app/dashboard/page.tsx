@@ -11,7 +11,8 @@ import { useWishlist } from "@/context/WishlistContext";
 
 interface SavedOrderInfo {
   orderNumber: string;
-  email: string;
+  email?: string;
+  phone?: string;
 }
 
 interface TrackedOrder {
@@ -61,11 +62,16 @@ export default function DashboardPage() {
       if (raw) info = JSON.parse(raw);
     } catch {}
 
-    if (!info?.orderNumber || !info?.email) return;
+    if (!info?.orderNumber) return;
     setSavedOrder(info);
     setOrderLoading(true);
 
-    fetch(`/api/orders/track?orderNumber=${encodeURIComponent(info.orderNumber)}&email=${encodeURIComponent(info.email)}`)
+    const contactParam = info.email
+      ? `email=${encodeURIComponent(info.email)}`
+      : info.phone
+      ? `phone=${encodeURIComponent(info.phone)}`
+      : "";
+    fetch(`/api/orders/track?orderNumber=${encodeURIComponent(info.orderNumber)}${contactParam ? `&${contactParam}` : ""}`)
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data?.order) setLatestOrder(data.order); })
       .catch(() => {})

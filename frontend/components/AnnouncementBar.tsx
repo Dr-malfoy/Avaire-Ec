@@ -1,5 +1,5 @@
 "use client";
-import { useState, useSyncExternalStore } from "react";
+import { useState, useEffect, useRef, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "aviar_announcement_dismissed";
 
@@ -12,16 +12,46 @@ export default function AnnouncementBar() {
     () => false
   );
   const [closed, setClosed] = useState(false);
+  const barRef = useRef<HTMLDivElement>(null);
+
+  const isVisible = !dismissed && !closed;
+
+  useEffect(() => {
+    const notifyHeight = () => {
+      const h = (isVisible && barRef.current) ? barRef.current.offsetHeight : 0;
+      document.documentElement.style.setProperty("--announcement-height", `${h}px`);
+      window.dispatchEvent(new CustomEvent("announcement-height-change", { detail: h }));
+    };
+
+    notifyHeight();
+
+    if (!isVisible) return;
+
+    const ro = new ResizeObserver(notifyHeight);
+    if (barRef.current) ro.observe(barRef.current);
+    window.addEventListener("resize", notifyHeight);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", notifyHeight);
+      document.documentElement.style.setProperty("--announcement-height", "0px");
+      window.dispatchEvent(new CustomEvent("announcement-height-change", { detail: 0 }));
+    };
+  }, [isVisible]);
 
   const handleClose = () => {
     setClosed(true);
+    document.documentElement.style.setProperty("--announcement-height", "0px");
+    window.dispatchEvent(new CustomEvent("announcement-height-change", { detail: 0 }));
     try { localStorage.setItem(STORAGE_KEY, "1"); } catch {}
   };
 
-  if (dismissed || closed) return null;
+  if (!isVisible) return null;
 
   return (
     <div
+      id="aviar-announcement-bar"
+      ref={barRef}
       style={{
         background: "#0a0a0a",
         color: "#fafaf8",
@@ -31,7 +61,7 @@ export default function AnnouncementBar() {
         letterSpacing: "0.12em",
         textTransform: "uppercase",
         position: "relative",
-        zIndex: 200,
+        zIndex: 105,
         lineHeight: 1.5,
       }}
     >

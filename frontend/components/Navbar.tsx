@@ -26,11 +26,42 @@ export default function Navbar() {
   const { wishlistCount } = useWishlist();
   const [siteLogo, setSiteLogo] = useState("");
 
+  const [announcementHeight, setAnnouncementHeight] = useState(0);
+  const [topOffset, setTopOffset] = useState(0);
+
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 80);
+    const update = (forcedH?: number) => {
+      let h = forcedH;
+      if (h === undefined) {
+        const el = document.getElementById("aviar-announcement-bar");
+        h = el ? el.offsetHeight : 0;
+      }
+      setAnnouncementHeight(h);
+      const sy = window.scrollY;
+      setIsScrolled(sy > 80);
+      setTopOffset(Math.max(0, h - sy));
+    };
+
+    update();
+
+    const handleHeightChange = (e: any) => {
+      update(typeof e?.detail === "number" ? e.detail : 0);
+    };
+
+    window.addEventListener("announcement-height-change", handleHeightChange);
+    return () => window.removeEventListener("announcement-height-change", handleHeightChange);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sy = window.scrollY;
+      setIsScrolled(sy > 80);
+      setTopOffset(Math.max(0, announcementHeight - sy));
+    };
+    handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [announcementHeight]);
 
   useEffect(() => {
     const update = () => setIsDesktop(window.innerWidth >= 768);
@@ -100,7 +131,7 @@ export default function Navbar() {
   return (
     <>
       <nav
-        style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "64px", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", transition: "all 0.4s ease", padding: "0 24px", ...bgStyle }}
+        style={{ position: "fixed", top: `${topOffset}px`, left: 0, width: "100%", height: "64px", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", transition: "background 0.4s ease, border-color 0.4s ease, filter 0.4s ease", padding: "0 24px", ...bgStyle }}
         className="md:px-12"
       >
         {/* Logo */}

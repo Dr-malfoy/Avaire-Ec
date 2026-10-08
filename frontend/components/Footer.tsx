@@ -47,7 +47,7 @@ export default function Footer() {
 
   const [settings, setSettings] = useState({
     footer_tagline: "Timeless design, exceptional craft. Luxury that respects the planet.",
-    footer_copyright: "AVIAR. All rights reserved.",
+    footer_copyright: "AVIAR. All rights reserved to mystrixit.site",
     footer_subtext: "Crafted by Samrise Digital",
     footer_instagram: "#",
     footer_pinterest: "#",
@@ -255,7 +255,23 @@ export default function Footer() {
           }}
         >
           <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)" }}>
-            © {new Date().getFullYear()} {settings.footer_copyright}
+            © {new Date().getFullYear()} {settings.footer_copyright.includes("mystrixit.site") ? (
+              <>
+                {settings.footer_copyright.split("mystrixit.site")[0]}
+                <a
+                  href="https://mystrixit.site"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#c9a96e", textDecoration: "none" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.textDecoration = "underline"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.textDecoration = "none"; }}
+                >
+                  mystrixit.site
+                </a>
+              </>
+            ) : (
+              settings.footer_copyright
+            )}
           </span>
           <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
             {["Privacy Policy", "Terms of Service", "Cookie Policy"].map((t) => (
